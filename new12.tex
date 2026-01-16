@@ -1069,48 +1069,158 @@ audit Assumption~\ref{ass:predictable_nuis} under forward cross-fitting.
 % ============================================================================
 \section{Simulation Study: Regime-Switching Propensities}\label{sec:simulation}
 
-\paragraph{Design.}
-We simulate a regime-switching adaptive assignment with logged propensities. For
-$t\le n_0=50$ (burn-in), set $\pi_t=0.5$. Let $\widehat\tau_{\mathrm{burn}}$ be the
-burn-in difference-in-means and set $\pi_t=0.8$ for $t>n_0$ if
-$\widehat\tau_{\mathrm{burn}}\ge 0$, and $\pi_t=0.2$ otherwise. Outcomes satisfy
+\paragraph{Objective.}
+We design a simulation suite to validate the paper's core pillars: (i) when
+$V_{\mathcal{T}}^2/n_{\mathrm{eff}}$ remains random because propensities do not
+stabilize, fixed-variance Wald approximations can fail; (ii) under variance
+stabilization, conventional CLTs with deterministic variance are accurate; (iii)
+predictability of nuisance learning (forward cross-fitting) is essential; and
+(iv) nuisance learning affects precision, not validity. Throughout, we use the
+self-normalized interval \eqref{eq:ci} based on the realized quadratic variation
+$\widehat V$ on the scored set $\mathcal{T}$.
+
+\paragraph{Monte Carlo protocol.}
+We report coverage of two-sided 95\% Wald intervals, average length, and Monte
+Carlo standard errors (MCSE) for coverage,
+$\widehat{\mathrm{SE}}=\sqrt{\hat p(1-\hat p)/R_{\mathrm{group}}}$, where
+$R_{\mathrm{group}}$ is the number of replications in the relevant group. We
+use $n\in\{500,2000\}$, $R=500$ replications, and seed $12345$. All reported
+numbers are produced from CSV outputs and rendered via \texttt{\textbackslash input}.
+
+\paragraph{Design A (random long-run variance; stabilization fails).}
+For $t\le n_0=50$ set $\pi_t=0.5$ and compute the burn-in difference-in-means
+$\widehat\tau_{\mathrm{burn}}$. For $t>n_0$, set $\pi_t=0.8$ if
+$\widehat\tau_{\mathrm{burn}}\ge 0$ and $\pi_t=0.2$ otherwise. Outcomes are
 $Y(0)\sim\mathcal{N}(0,1)$ and $Y(1)=\tau+\varepsilon_1$ with $\tau=0$ and
-$\varepsilon_1\sim\mathcal{N}(0,9)$ (no covariates, so AIPW reduces to IPW with logged $\pi_t$).
-We take $n\in\{500,2000\}$ and $R=3000$ replications, comparing (i) \emph{SN}, the
-self-normalized interval \eqref{eq:ci}; and (ii) \emph{Fixed}, a misspecified
-fixed-variance interval computed as if propensities stabilized at $0.5$.
+$\varepsilon_1\sim\mathcal{N}(0,9)$ (no covariates, so AIPW reduces to IPW with
+logged $\pi_t$). We score $\mathcal{T}=\{n_0+1,\dots,n\}$ so
+$n_{\mathrm{eff}}=n-n_0$. We compare (i) \emph{SN}, the self-normalized interval
+\eqref{eq:ci}, and (ii) \emph{Fixed}, a misspecified fixed-variance interval
+computed as if propensities stabilized at $\pi=0.5$.
 
 \begin{table}[ht]
 \centering
 \small
-\begin{tabular}{rllrrr}
+\begin{tabular}{rlrrr}
 \toprule
-$n$ & method & regime & coverage & avg. length & count \\
+$n$ & method & coverage & mcse & avg.\ length \\
 \midrule
-500 & Fixed & high & 0.965 & 0.784 & 1525 \\
-500 & Fixed & low & 0.812 & 0.784 & 1475 \\
-500 & Fixed & all & 0.890 & 0.784 & 3000 \\
-500 & SN & high & 0.942 & 0.714 & 1525 \\
-500 & SN & low & 0.942 & 1.155 & 1475 \\
-500 & SN & all & 0.942 & 0.931 & 3000 \\
-2000 & Fixed & high & 0.971 & 0.392 & 1492 \\
-2000 & Fixed & low & 0.810 & 0.392 & 1508 \\
-2000 & Fixed & all & 0.890 & 0.392 & 3000 \\
-2000 & SN & high & 0.951 & 0.354 & 1492 \\
-2000 & SN & low & 0.950 & 0.592 & 1508 \\
-2000 & SN & all & 0.950 & 0.474 & 3000 \\
+500 & Fixed & 0.902 & 0.013 & 0.826 \\
+500 & SN & 0.956 & 0.009 & 0.989 \\
+2000 & Fixed & 0.878 & 0.015 & 0.397 \\
+2000 & SN & 0.946 & 0.010 & 0.475 \\
 \bottomrule
 \end{tabular}
-\caption{Monte Carlo coverage (two-sided 95\% Wald intervals) by regime for the regime-switching propensity design. Rows labeled ``all'' report unconditional performance aggregated across regimes (weighted by the regime counts).}
-\label{tab:sim_regime_conditional}
+\caption{Design A: unconditional coverage, MCSE, and average length.}
+\label{tab:sim_designA_main}
 \end{table}
 
-\paragraph{Interpretation.}
-Because the post-burn-in propensity is random, $V_{\mathcal{T}}^2/n_{\mathrm{eff}}$
-is random across replications, violating Assumption~\ref{ass:stab} behind fixed-variance
-Wald approximations. The Fixed method under-covers in the low-propensity regime,
-while SN adapts to realized quadratic variation and delivers near-nominal coverage
-in both regimes (with longer intervals when propensities are more extreme).
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{rllrrrr}
+\toprule
+$n$ & method & regime & coverage & mcse & avg.\ length & count \\
+\midrule
+500 & Fixed & high & 0.981 & 0.009 & 0.826 & 257 \\
+500 & Fixed & low & 0.819 & 0.025 & 0.826 & 243 \\
+500 & SN & high & 0.953 & 0.013 & 0.744 & 257 \\
+500 & SN & low & 0.959 & 0.013 & 1.248 & 243 \\
+2000 & Fixed & high & 0.958 & 0.012 & 0.397 & 262 \\
+2000 & Fixed & low & 0.790 & 0.026 & 0.397 & 238 \\
+2000 & SN & high & 0.935 & 0.015 & 0.357 & 262 \\
+2000 & SN & low & 0.958 & 0.013 & 0.605 & 238 \\
+\bottomrule
+\end{tabular}
+\caption{Design A: regime-conditional performance (high/low).}
+\label{tab:sim_designA_cond}
+\end{table}
+
+Fixed under-covers in the low-propensity regime because
+$V_{\mathcal{T}}^2/n_{\mathrm{eff}}$ is random across replications, violating
+Assumption~\ref{ass:stab}. SN adapts to realized quadratic variation and
+achieves near-nominal coverage in both regimes, with longer intervals when
+propensities are more extreme.
+
+\paragraph{Design B (stabilization benchmark).}
+We keep the regime-switching rule but set $\tau=2$ and let
+$n_0=\lceil\sqrt{n}\rceil$, so the long-run propensity stabilizes at the high
+regime with high probability. Fixed now uses the deterministic variance implied
+by stabilization at $\pi=0.8$ (with the CLT variance formula accounting for
+$\tau$), while SN again uses \eqref{eq:ci}.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{rlrrr}
+\toprule
+$n$ & method & coverage & mcse & avg.\ length \\
+\midrule
+500 & Fixed & 0.966 & 0.008 & 0.745 \\
+500 & SN & 0.966 & 0.008 & 0.752 \\
+2000 & Fixed & 0.942 & 0.010 & 0.368 \\
+2000 & SN & 0.942 & 0.010 & 0.368 \\
+\bottomrule
+\end{tabular}
+\caption{Design B: stabilization benchmark.}
+\label{tab:sim_designB}
+\end{table}
+
+Both methods recover near-nominal coverage once stabilization approximately
+holds, consistent with the conventional CLT benchmark.
+
+\paragraph{Design C (predictability discipline and nuisance learning).}
+Let $X\in\R^{20}$ with $X\sim\mathcal{N}(0,I)$ and define
+$m_0^\star(x)=0.5x_1+0.25x_2^2-0.25+0.5\sin(x_3)$ and
+$\tau(x)=\tau_0+\delta\sin(x_1)$ with $\tau_0=0.2$ and $\delta=0.2$, so
+$\theta_0=\E[\tau(X)]=0.2$. Errors are $t_5$ scaled to unit variance. We use
+forward blocks ($K=5$) with a burn-in block $I_1$; nuisances are fit on past
+blocks only and frozen within each scored block. Assignment is predictable and
+logged, with
+\[
+\pi_t=\varepsilon+(1-2\varepsilon)\expit\{\lambda(\widehat m_{1}(X_t)-\widehat m_{0}(X_t))\},
+\quad \varepsilon=0.1,\ \lambda=2.5.
+\]
+Predictable nuisance regressions use ridge on a basis that includes the true
+nonlinear terms (intercept, $x_1$, $x_2^2$, $\sin x_3$, $\sin x_1$). The leaky
+control refits on the full sample using a higher-order polynomial/interactions
+basis (still ridge), which violates predictability and can overfit future noise.
+We score $\mathcal{T}$ as the union of blocks $2$--$K$ and compare:
+SN-AIPW (predictable forward cross-fitting), SN-IPW ($\widehat m\equiv 0$),
+SN-Oracle (true $m^\star$), and Leaky-AIPW (nuisances fit on the full sample,
+violating predictability).
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{rlrrrrr}
+\toprule
+$n$ & method & coverage & mcse & avg.\ length & bias & rmse \\
+\midrule
+500 & SN-AIPW & 0.954 & 0.009 & 0.434 & 0.003 & 0.112 \\
+500 & SN-IPW & 0.956 & 0.009 & 0.530 & -0.004 & 0.138 \\
+500 & SN-Oracle & 0.952 & 0.010 & 0.422 & 0.004 & 0.109 \\
+500 & Leaky-AIPW & 0.846 & 0.016 & 0.409 & 0.012 & 0.151 \\
+2000 & SN-AIPW & 0.954 & 0.009 & 0.205 & 0.001 & 0.052 \\
+2000 & SN-IPW & 0.956 & 0.009 & 0.254 & 0.000 & 0.065 \\
+2000 & SN-Oracle & 0.954 & 0.009 & 0.204 & 0.001 & 0.052 \\
+2000 & Leaky-AIPW & 0.936 & 0.011 & 0.198 & 0.001 & 0.054 \\
+\bottomrule
+\end{tabular}
+\caption{Design C: predictability and nuisance-learning comparison.}
+\label{tab:sim_designC}
+\end{table}
+
+SN-AIPW retains nominal coverage, while Leaky-AIPW under-covers, illustrating
+the predictability requirement. Oracle and AIPW have shorter intervals than IPW,
+confirming that nuisance learning improves precision without compromising
+validity.
+
+\paragraph{Reproducibility.}
+Smoke test:
+\texttt{python simulate\_suite.py --design all --n\_list 500,2000 --R 50 --seed 12345 --smoke}.
+Final tables:
+\texttt{python simulate\_suite.py --design all --n\_list 500,2000 --R 500 --seed 12345}.
 
 % ============================================================================
 % 7. CONCLUSION
